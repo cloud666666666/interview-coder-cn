@@ -57,6 +57,8 @@ const getShortcutDescription = (action: string) => {
   const descriptionMap: Record<string, string> = {
     hideOrShowMainWindow: '隐藏/显示窗口',
     ignoreOrEnableMouse: '鼠标穿透(窗口对鼠标隐身)',
+    increaseOpacity: '提高不透明度(窗口更清晰)',
+    decreaseOpacity: '提高透明度(窗口更透明)',
     takeScreenshot: '截图并生成解题建议（会新开对话）',
     appendScreenshot: '追加截图并生成解题建议',
     stopSolutionStream: '停止生成',

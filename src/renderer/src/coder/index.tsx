@@ -26,6 +26,15 @@ export default function CoderPage() {
   }, [opacity])
 
   useEffect(() => {
+    window.api.onAdjustOpacity((delta) => {
+      useSettingsStore.getState().adjustOpacity(delta)
+    })
+    return () => {
+      window.api.removeAdjustOpacityListener()
+    }
+  }, [])
+
+  useEffect(() => {
     window.api.updateAppState({ inCoderPage: true })
     return () => {
       window.api.updateAppState({ inCoderPage: false })

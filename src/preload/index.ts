@@ -33,6 +33,16 @@ const api = {
   updateShortcuts: (shortcuts: { action: string; key: string }[]) =>
     ipcRenderer.invoke('updateShortcuts', shortcuts),
 
+  // Listen for window opacity adjustments triggered by shortcuts
+  onAdjustOpacity: (callback: (delta: number) => void) => {
+    ipcRenderer.on('adjust-opacity', (_event, delta) => {
+      callback(delta)
+    })
+  },
+  removeAdjustOpacityListener: () => {
+    ipcRenderer.removeAllListeners('adjust-opacity')
+  },
+
   // Listen for screenshot events
   onScreenshotTaken: (callback: (screenshotData: string) => void) => {
     ipcRenderer.on('screenshot-taken', (_event, screenshotData) => {

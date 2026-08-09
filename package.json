@@ -3,6 +3,12 @@
   "version": "1.8.0",
   "description": "截屏解题助手，实时截屏并生成解题思路和答案",
   "main": "./out/main/index.js",
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

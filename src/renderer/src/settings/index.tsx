@@ -29,7 +29,13 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
-import { useSettingsStore, PRESET_SCENE_PROMPTS } from '@/lib/store/settings'
+import {
+  useSettingsStore,
+  PRESET_SCENE_PROMPTS,
+  OPACITY_MIN,
+  OPACITY_MAX,
+  OPACITY_STEP
+} from '@/lib/store/settings'
 import { isMac } from '@/lib/utils/env'
 import { SelectModel } from './SelectModel'
 import { CustomShortcuts, ResetDefaultShortcuts } from './CustomShortcuts'
@@ -430,14 +436,16 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">
                 窗口透明度
-                <span className="ml-2 text-xs font-light">拖动可实时预览效果</span>
+                <span className="ml-2 text-xs font-light">
+                  拖动可实时预览效果，也可在主界面用快捷键调节
+                </span>
               </label>
               <div className="w-60 flex items-center gap-2">
                 <span className="text-xs whitespace-nowrap">透明</span>
                 <Slider
-                  min={0.1}
-                  max={1}
-                  step={0.05}
+                  min={OPACITY_MIN}
+                  max={OPACITY_MAX}
+                  step={OPACITY_STEP}
                   value={[opacity]}
                   onValueChange={(value) => {
                     updateSetting('opacity', value[0])

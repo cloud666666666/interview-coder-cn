@@ -61,6 +61,8 @@ enum ShortcutStatus {
 }
 
 const MOVE_STEP = 200
+/** Opacity delta per shortcut press, matching the settings slider step */
+const OPACITY_STEP = 0.05
 const shortcuts: Record<string, Shortcut> = {}
 
 type AbortReason = 'user' | 'new-request'
@@ -208,6 +210,16 @@ function keepWindowInFront(window: BrowserWindow) {
 
   // Ensure background guard is running for persistent protection
   startBackgroundGuard(window)
+}
+
+/**
+ * Opacity is owned by the renderer settings store (persisted + synced back to
+ * main), so the shortcut only asks the renderer to step it.
+ */
+function adjustOpacity(delta: number) {
+  const mainWindow = global.mainWindow
+  if (!mainWindow || mainWindow.isDestroyed() || !state.inCoderPage) return
+  mainWindow.webContents.send('adjust-opacity', delta)
 }
 
 function abortCurrentStream(reason: AbortReason) {
@@ -492,6 +504,15 @@ const callbacks: Record<string, () => void> = {
     mainWindow.setIgnoreMouseEvents(state.ignoreMouse)
     mainWindow.webContents.send('sync-app-state', state)
   },
+
+  increaseOpacity: () => {
+    adjustOpacity(OPACITY_STEP)
+  },
+
+  decreaseOpacity: () => {
+    adjustOpacity(-OPACITY_STEP)
+  },
+
   pageUp: () => {
     const mainWindow = global.mainWindow
     if (!mainWindow || mainWindow.isDestroyed() || !state.inCoderPage) return

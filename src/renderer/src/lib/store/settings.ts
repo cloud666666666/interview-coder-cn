@@ -49,6 +49,10 @@ function composeCustomPrompt(scenes: PromptScene[], activeSceneId: string): stri
   return scene.prompt.trim() || PRESET_SCENE_PROMPTS[scene.id] || ''
 }
 
+export const OPACITY_MIN = 0.1
+export const OPACITY_MAX = 1
+export const OPACITY_STEP = 0.05
+
 interface Settings {
   // theme: 'light' | 'dark'an
   apiBaseURL: string
@@ -75,6 +79,8 @@ interface Settings {
 
 interface SettingsStore extends Settings {
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void
+  /** Step the window opacity within [OPACITY_MIN, OPACITY_MAX] */
+  adjustOpacity: (delta: number) => void
   syncSettings: (settings: Partial<Settings>) => void
   setActiveScene: (id: string) => void
   updateScenePrompt: (id: string, prompt: string) => void
@@ -110,6 +116,12 @@ export const useSettingsStore = create<SettingsStore>()(
       ...defaultSettings,
       updateSetting: (key, value) => {
         set({ [key]: value })
+      },
+      adjustOpacity: (delta) => {
+        const raw = get().opacity + delta
+        // Round to 2 decimals to avoid float drift across repeated presses
+        const opacity = Math.min(OPACITY_MAX, Math.max(OPACITY_MIN, Math.round(raw * 100) / 100))
+        set({ opacity })
       },
       syncSettings: (settings) => {
         set(settings)

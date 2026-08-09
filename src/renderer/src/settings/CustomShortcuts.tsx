@@ -66,6 +66,16 @@ export function CustomShortcuts() {
             description="启用后窗口对鼠标穿透，可以点击窗口背后的内容"
             shortcut="ignoreOrEnableMouse"
           />
+          <Shortcut
+            label="提高不透明度"
+            description="每次调整 5%，窗口更清晰"
+            shortcut="increaseOpacity"
+          />
+          <Shortcut
+            label="提高透明度"
+            description="每次调整 5%，窗口更透明"
+            shortcut="decreaseOpacity"
+          />
         </div>
 
         {/* Screenshot & AI */}
