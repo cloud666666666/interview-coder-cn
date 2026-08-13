@@ -33,6 +33,26 @@ const api = {
   updateShortcuts: (shortcuts: { action: string; key: string }[]) =>
     ipcRenderer.invoke('updateShortcuts', shortcuts),
 
+  // Trigger the small set of user-facing actions exposed by the overlay toolbar.
+  triggerAction: (
+    action:
+      | 'takeScreenshot'
+      | 'appendScreenshot'
+      | 'stopSolutionStream'
+      | 'ignoreOrEnableMouse'
+      | 'increaseOpacity'
+      | 'decreaseOpacity'
+      | 'pageUp'
+      | 'pageDown'
+      | 'moveMainWindowUp'
+      | 'moveMainWindowDown'
+      | 'moveMainWindowLeft'
+      | 'moveMainWindowRight'
+      | 'toggleTranscription'
+      | 'clearTranscription'
+  ) => ipcRenderer.invoke('triggerAction', action),
+  setToolbarVisible: (visible: boolean) => ipcRenderer.invoke('setToolbarVisible', visible),
+
   // Listen for window opacity adjustments triggered by shortcuts
   onAdjustOpacity: (callback: (delta: number) => void) => {
     ipcRenderer.on('adjust-opacity', (_event, delta) => {

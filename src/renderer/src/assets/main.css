@@ -40,3 +40,16 @@
 .transcription-scroll:hover::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
 }
+
+.overlay-toolbar {
+  @apply flex h-[52px] items-center gap-1 rounded-md bg-gray-700/90 p-2 text-white;
+  -webkit-app-region: no-drag;
+}
+
+.overlay-toolbar button {
+  @apply size-8 shrink-0 cursor-default hover:bg-white/15 hover:text-white;
+}
+
+body:has(.overlay-toolbar) {
+  overflow: hidden;
+}

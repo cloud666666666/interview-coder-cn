@@ -97,6 +97,11 @@ function applyTopMost(win: BrowserWindow, aggressive = true) {
   if (!win || win.isDestroyed()) return
   win.setAlwaysOnTop(true, 'screen-saver', FRONT_RELATIVE_LEVEL)
   if (aggressive) win.moveTop()
+
+  if (state.ignoreMouse && global.toolbarWindow && !global.toolbarWindow.isDestroyed()) {
+    global.toolbarWindow.setAlwaysOnTop(true, 'screen-saver', FRONT_RELATIVE_LEVEL + 1)
+    if (aggressive) global.toolbarWindow.moveTop()
+  }
 }
 
 /**
@@ -155,6 +160,7 @@ function softHideWindow(window: BrowserWindow) {
   window.setOpacity(0)
   window.setIgnoreMouseEvents(true)
   window.setBounds(getOffscreenBounds(window))
+  global.toolbarWindow?.hide()
 }
 
 function restoreSoftHiddenWindow(window: BrowserWindow) {
@@ -167,6 +173,9 @@ function restoreSoftHiddenWindow(window: BrowserWindow) {
 
   isWindowSoftHidden = false
   softHiddenBounds = null
+  if (state.inCoderPage) {
+    global.toolbarWindow?.showInactive()
+  }
   keepWindowInFront(window)
 }
 
@@ -178,6 +187,9 @@ function showMainWindow(window: BrowserWindow) {
   }
 
   applyContentProtection(window, process.platform === 'win32')
+  if (state.inCoderPage) {
+    global.toolbarWindow?.showInactive()
+  }
   keepWindowInFront(window)
 }
 
@@ -502,6 +514,7 @@ const callbacks: Record<string, () => void> = {
     if (!mainWindow || mainWindow.isDestroyed() || !state.inCoderPage) return
     state.ignoreMouse = !state.ignoreMouse
     mainWindow.setIgnoreMouseEvents(state.ignoreMouse)
+    global.toolbarWindow?.showInactive()
     mainWindow.webContents.send('sync-app-state', state)
   },
 
@@ -566,6 +579,23 @@ const callbacks: Record<string, () => void> = {
     mainWindow.webContents.send('transcription-cleared')
   }
 }
+
+const clickableActions = new Set([
+  'takeScreenshot',
+  'appendScreenshot',
+  'stopSolutionStream',
+  'ignoreOrEnableMouse',
+  'increaseOpacity',
+  'decreaseOpacity',
+  'pageUp',
+  'pageDown',
+  'moveMainWindowUp',
+  'moveMainWindowDown',
+  'moveMainWindowLeft',
+  'moveMainWindowRight',
+  'toggleTranscription',
+  'clearTranscription'
+])
 
 function unregisterShortcut(action: string) {
   const shortcut = shortcuts[action]
@@ -647,6 +677,22 @@ ipcMain.handle('stopSolutionStream', () => {
   if (!currentStreamContext) return false
   abortCurrentStream('user')
   return true
+})
+
+ipcMain.handle('triggerAction', (_event, action: string) => {
+  if (!clickableActions.has(action)) return false
+  callbacks[action]?.()
+  return true
+})
+
+ipcMain.handle('setToolbarVisible', (_event, visible: boolean) => {
+  const toolbarWindow = global.toolbarWindow
+  if (!toolbarWindow || toolbarWindow.isDestroyed()) return
+  if (visible) {
+    toolbarWindow.showInactive()
+  } else {
+    toolbarWindow.hide()
+  }
 })
 
 ipcMain.handle('sendFollowUpQuestion', async (_event, question: string) => {

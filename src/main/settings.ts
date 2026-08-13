@@ -35,7 +35,7 @@ ipcMain.handle('selectScreenshotDir', async () => {
 export const settings = {
   apiBaseURL: process.env.API_BASE_URL || '',
   apiKey: process.env.API_KEY || '',
-  model: process.env.MODEL || '',
+  model: process.env.MODEL || 'gpt-5.4',
   customPrompt: '',
   screenshotAutoSave: false,
   screenshotDir: '',
