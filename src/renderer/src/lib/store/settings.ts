@@ -91,7 +91,7 @@ interface SettingsStore extends Settings {
 const defaultSettings: Settings = {
   apiBaseURL: '',
   apiKey: '',
-  model: 'gpt-5.4',
+  model: '',
   customModels: [],
   customPrompt: PRESET_SCENE_PROMPTS[CODING_SCENE_ID],
   scenes: createPresetScenes(),
@@ -169,7 +169,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'interview-coder-settings',
-      version: 8,
+      version: 7,
       migrate: (persisted, version) => {
         const state = persisted as Partial<Settings>
         // Drop the legacy codeLanguage field (language now lives in the prompt text)
@@ -185,9 +185,6 @@ export const useSettingsStore = create<SettingsStore>()(
             activeSceneId = id
           }
           return { ...state, scenes, activeSceneId }
-        }
-        if (version < 8 && !state.model) {
-          state.model = 'gpt-5.4'
         }
         return state
       },
