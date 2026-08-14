@@ -50,6 +50,8 @@ import {
 export default function SettingsPage() {
   const {
     opacity,
+    showOverlayToolbar,
+    toolbarHoverDelay,
     apiBaseURL,
     apiKey,
     model,
@@ -455,6 +457,45 @@ export default function SettingsPage() {
                 <span className="text-xs whitespace-nowrap">不透明</span>
               </div>
             </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                悬浮工具条
+                <span className="ml-2 text-xs font-light">
+                  在主窗口上方显示一排按钮，可用鼠标点击替代快捷键操作，详见帮助中心
+                </span>
+              </label>
+              <Switch
+                className="scale-y-90"
+                checked={showOverlayToolbar}
+                onCheckedChange={(checked) => updateSetting('showOverlayToolbar', checked)}
+              />
+            </div>
+
+            {showOverlayToolbar && (
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">
+                  悬停触发
+                  <span className="ml-2 text-xs font-light">
+                    鼠标在按钮上停留指定时间即触发，无需点击；停留过程中按钮下方有进度条
+                  </span>
+                </label>
+                <Select
+                  value={String(toolbarHoverDelay)}
+                  onValueChange={(val) => updateSetting('toolbarHoverDelay', Number(val))}
+                >
+                  <SelectTrigger className="w-60 bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">关闭（仅点击触发）</SelectItem>
+                    <SelectItem value="500">停留 0.5 秒</SelectItem>
+                    <SelectItem value="1000">停留 1 秒</SelectItem>
+                    <SelectItem value="2000">停留 2 秒</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
 

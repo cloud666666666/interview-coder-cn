@@ -53,6 +53,16 @@ const api = {
   ) => ipcRenderer.invoke('triggerAction', action),
   setToolbarVisible: (visible: boolean) => ipcRenderer.invoke('setToolbarVisible', visible),
 
+  // Settings the toolbar window needs, pushed from main (its own store is a separate copy)
+  onSyncToolbarSettings: (callback: (settings: { hoverDelay: number }) => void) => {
+    ipcRenderer.on('sync-toolbar-settings', (_event, settings) => {
+      callback(settings)
+    })
+  },
+  removeSyncToolbarSettingsListener: () => {
+    ipcRenderer.removeAllListeners('sync-toolbar-settings')
+  },
+
   // Listen for window opacity adjustments triggered by shortcuts
   onAdjustOpacity: (callback: (delta: number) => void) => {
     ipcRenderer.on('adjust-opacity', (_event, delta) => {

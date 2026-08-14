@@ -67,11 +67,13 @@ export default function App() {
 
 function ToolbarVisibilityController() {
   const location = useLocation()
+  const showOverlayToolbar = useSettingsStore((state) => state.showOverlayToolbar)
 
   useEffect(() => {
+    // The toolbar window renders this app too, but must not drive its own visibility
     if (location.pathname === '/toolbar') return
-    void window.api.setToolbarVisible(location.pathname === '/')
-  }, [location.pathname])
+    void window.api.setToolbarVisible(location.pathname === '/' && showOverlayToolbar)
+  }, [location.pathname, showOverlayToolbar])
 
   return null
 }

@@ -2,6 +2,12 @@ import { globalShortcut, ipcMain, screen } from 'electron'
 import type { BrowserWindow, Rectangle } from 'electron'
 import type { ModelMessage } from 'ai'
 import { applyContentProtection } from './main-window'
+import {
+  showToolbar,
+  hideToolbar,
+  setToolbarWanted,
+  reassertToolbarTopMost
+} from './toolbar-window'
 import { takeScreenshot } from './take-screenshot'
 import { saveScreenshotToDisk } from './save-screenshot'
 import { getSolutionStream, getFollowUpStream, getGeneralStream } from './ai'
@@ -98,9 +104,8 @@ function applyTopMost(win: BrowserWindow, aggressive = true) {
   win.setAlwaysOnTop(true, 'screen-saver', FRONT_RELATIVE_LEVEL)
   if (aggressive) win.moveTop()
 
-  if (state.ignoreMouse && global.toolbarWindow && !global.toolbarWindow.isDestroyed()) {
-    global.toolbarWindow.setAlwaysOnTop(true, 'screen-saver', FRONT_RELATIVE_LEVEL + 1)
-    if (aggressive) global.toolbarWindow.moveTop()
+  if (state.ignoreMouse) {
+    reassertToolbarTopMost(FRONT_RELATIVE_LEVEL + 1, aggressive)
   }
 }
 
@@ -160,7 +165,7 @@ function softHideWindow(window: BrowserWindow) {
   window.setOpacity(0)
   window.setIgnoreMouseEvents(true)
   window.setBounds(getOffscreenBounds(window))
-  global.toolbarWindow?.hide()
+  hideToolbar()
 }
 
 function restoreSoftHiddenWindow(window: BrowserWindow) {
@@ -173,9 +178,7 @@ function restoreSoftHiddenWindow(window: BrowserWindow) {
 
   isWindowSoftHidden = false
   softHiddenBounds = null
-  if (state.inCoderPage) {
-    global.toolbarWindow?.showInactive()
-  }
+  showToolbar()
   keepWindowInFront(window)
 }
 
@@ -187,9 +190,7 @@ function showMainWindow(window: BrowserWindow) {
   }
 
   applyContentProtection(window, process.platform === 'win32')
-  if (state.inCoderPage) {
-    global.toolbarWindow?.showInactive()
-  }
+  showToolbar()
   keepWindowInFront(window)
 }
 
@@ -514,7 +515,7 @@ const callbacks: Record<string, () => void> = {
     if (!mainWindow || mainWindow.isDestroyed() || !state.inCoderPage) return
     state.ignoreMouse = !state.ignoreMouse
     mainWindow.setIgnoreMouseEvents(state.ignoreMouse)
-    global.toolbarWindow?.showInactive()
+    showToolbar()
     mainWindow.webContents.send('sync-app-state', state)
   },
 
@@ -686,13 +687,7 @@ ipcMain.handle('triggerAction', (_event, action: string) => {
 })
 
 ipcMain.handle('setToolbarVisible', (_event, visible: boolean) => {
-  const toolbarWindow = global.toolbarWindow
-  if (!toolbarWindow || toolbarWindow.isDestroyed()) return
-  if (visible) {
-    toolbarWindow.showInactive()
-  } else {
-    toolbarWindow.hide()
-  }
+  setToolbarWanted(visible)
 })
 
 ipcMain.handle('sendFollowUpQuestion', async (_event, question: string) => {

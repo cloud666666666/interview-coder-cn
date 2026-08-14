@@ -1,11 +1,8 @@
 import { join } from 'node:path'
-import { shell, BrowserWindow, screen } from 'electron'
+import { shell, BrowserWindow } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-
-const TOOLBAR_WIDTH = 504
-const TOOLBAR_HEIGHT = 52
-const TOOLBAR_INSET = 4
+import { createToolbarWindow } from './toolbar-window'
 
 export function applyContentProtection(window: BrowserWindow, forceReset = false): void {
   if (!window || window.isDestroyed()) return
@@ -40,31 +37,8 @@ export function createWindow(): void {
 
   // Store reference to mainWindow globally
   global.mainWindow = mainWindow
-  const toolbarWindow = createToolbarWindow(mainWindow)
-  global.toolbarWindow = toolbarWindow
-
-  const syncToolbarBounds = () => {
-    if (toolbarWindow.isDestroyed() || mainWindow.isDestroyed()) return
-    const mainBounds = mainWindow.getBounds()
-    const workArea = screen.getDisplayMatching(mainBounds).workArea
-    toolbarWindow.setBounds({
-      x: Math.min(Math.max(mainBounds.x, workArea.x), workArea.x + workArea.width - TOOLBAR_WIDTH),
-      y: Math.max(workArea.y, mainBounds.y - TOOLBAR_HEIGHT - TOOLBAR_INSET),
-      width: TOOLBAR_WIDTH,
-      height: TOOLBAR_HEIGHT
-    })
-  }
-
-  mainWindow.on('move', syncToolbarBounds)
-  mainWindow.on('resize', syncToolbarBounds)
-  mainWindow.on('show', () => {
-    syncToolbarBounds()
-  })
-  mainWindow.on('hide', () => toolbarWindow.hide())
-  mainWindow.on('closed', () => {
-    if (!toolbarWindow.isDestroyed()) toolbarWindow.close()
-    global.toolbarWindow = null
-  })
+  // The toolbar follows the main window's position and visibility on its own
+  createToolbarWindow(mainWindow)
 
   mainWindow.setMenuBarVisibility(false)
 
@@ -111,36 +85,4 @@ export function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
-}
-
-function createToolbarWindow(parent: BrowserWindow): BrowserWindow {
-  const toolbarWindow = new BrowserWindow({
-    width: TOOLBAR_WIDTH,
-    height: TOOLBAR_HEIGHT,
-    frame: false,
-    transparent: true,
-    hasShadow: false,
-    focusable: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    show: false,
-    parent,
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
-  })
-
-  toolbarWindow.setMenuBarVisibility(false)
-  toolbarWindow.setAlwaysOnTop(true, 'screen-saver', 2)
-  toolbarWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-  applyContentProtection(toolbarWindow)
-
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    toolbarWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}#/toolbar`)
-  } else {
-    toolbarWindow.loadFile(join(__dirname, '../renderer/index.html'), { hash: 'toolbar' })
-  }
-
-  return toolbarWindow
 }

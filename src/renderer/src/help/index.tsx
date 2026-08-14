@@ -13,6 +13,7 @@ import ShortcutRenderer from '@/components/ShortcutRenderer'
 import { platformAlt } from '@/lib/utils/env'
 import { HelpSection } from './components'
 import { Shortcuts } from './Shortcuts'
+import { OverlayToolbarHelp } from './OverlayToolbar'
 import { FAQ } from './FAQ'
 
 export default function HelpPage() {
@@ -90,6 +91,9 @@ export default function HelpPage() {
 
         {/* Keyboard Shortcuts */}
         <Shortcuts />
+
+        {/* Overlay Toolbar */}
+        <OverlayToolbarHelp />
 
         {/* FAQ */}
         <FAQ />

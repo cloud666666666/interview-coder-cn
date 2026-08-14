@@ -42,14 +42,30 @@
 }
 
 .overlay-toolbar {
-  @apply flex h-[52px] items-center gap-1 rounded-md bg-gray-700/90 p-2 text-white;
+  @apply flex h-[52px] items-center gap-1 rounded-md bg-gray-700/80 p-2 text-white;
   -webkit-app-region: no-drag;
 }
 
 .overlay-toolbar button {
-  @apply size-8 shrink-0 cursor-default hover:bg-white/15 hover:text-white;
+  @apply relative size-8 shrink-0 cursor-default overflow-hidden hover:bg-white/15 hover:text-white;
 }
 
-body:has(.overlay-toolbar) {
+/* Fills up over the dwell time, so hover-to-trigger is visible before it fires */
+.dwell-progress {
+  @apply pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-white/80;
+  animation: dwell-fill linear forwards;
+}
+
+@keyframes dwell-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The toolbar window holds nothing but the toolbar, so it must never scroll */
+body:has(.overlay-toolbar-root) {
   overflow: hidden;
 }

@@ -33,6 +33,7 @@ src/
 ├── main/                    # Electron main process
 │   ├── index.ts             # App entry: lifecycle, error handling, app.whenReady()
 │   ├── main-window.ts       # BrowserWindow creation (frameless, transparent, always-on-top)
+│   ├── toolbar-window.ts    # Overlay toolbar window: bounds/visibility/opacity glued to main window
 │   ├── shortcuts.ts         # Global shortcuts registration + AI streaming orchestration (largest file)
 │   ├── ai.ts                # Vercel AI SDK integration, 3 streaming functions
 │   ├── settings.ts          # App settings object + IPC handlers
@@ -55,14 +56,16 @@ src/
         │   ├── AppContent.tsx# Screenshots gallery + markdown solution + error banner
         │   ├── AppStatusBar.tsx    # Loading indicator, follow-up dialog, shortcut hints
         │   ├── TranscriptionBar.tsx # Absolute-positioned real-time transcription overlay
+        │   ├── OverlayToolbar.tsx  # Contents of the toolbar window (route `/toolbar`)
         │   └── PrerequisitesChecker.tsx  # Modal for API key setup
         ├── settings/         # Settings page
         │   ├── index.tsx     # AI config, coding, appearance, shortcuts, privacy
         │   ├── SelectModel.tsx     # Combobox with custom model input
         │   └── CustomShortcuts.tsx # Shortcut key recorder
         ├── help/             # Help page
-        │   ├── index.tsx     # Quick start guide, shortcuts, FAQ
+        │   ├── index.tsx     # Quick start guide, shortcuts, toolbar, FAQ
         │   ├── Shortcuts.tsx
+        │   ├── OverlayToolbar.tsx  # Toolbar section (buttons + meanings + shortcuts)
         │   ├── FAQ.tsx
         │   └── components/index.tsx  # HelpSection wrapper
         ├── components/
@@ -72,10 +75,11 @@ src/
         ├── lib/
         │   ├── store/        # Zustand stores
         │   │   ├── app.ts       # ignoreMouse state, synced from main process
-        │   │   ├── settings.ts  # API config, model, prompt scenes, opacity (persisted v6)
+        │   │   ├── settings.ts  # API config, model, prompt scenes, opacity, toolbar (persisted v6)
         │   │   ├── shortcuts.ts # Shortcut bindings (persisted v5, with migration)
         │   │   ├── solution.ts  # Loading state, solution chunks, screenshots, errors
         │   │   └── transcription.ts # Transcription state: isTranscribing, text, error
+        │   ├── toolbar-actions.ts # Toolbar button list (action + icon + label), shared with help
         │   ├── utils/
         │   │   ├── index.ts     # cn() helper, getCloneableFields()
         │   │   ├── env.ts       # isMac, platformAlt
@@ -137,6 +141,7 @@ src/
 - `initShortcuts` / `getShortcuts` / `updateShortcuts` — shortcut management
 - `stopSolutionStream` — abort current AI stream
 - `sendFollowUpQuestion` — follow-up within conversation
+- `triggerAction` / `setToolbarVisible` — overlay toolbar: run a shortcut action, toggle the window
 - `start-transcription` / `stop-transcription` — speech transcription lifecycle
 - `get-transcription-text` / `clear-transcription-text` — read/clear accumulated text
 
@@ -147,13 +152,14 @@ src/
 - `ai-loading-start` / `ai-loading-end` — loading state
 - `scroll-page-up` / `scroll-page-down` — keyboard-driven scroll
 - `toggle-transcription` — trigger start/stop transcription from shortcut
+- `sync-toolbar-settings` — push toolbar-only settings (hover dwell) into the toolbar window
 - `transcription-text` / `transcription-error` / `transcription-stopped` / `transcription-cleared` — transcription events
 
 ### Zustand Stores
 
 | Store | File | Persisted | Key State |
 |-------|------|-----------|-----------|
-| `useSettingsStore` | `lib/store/settings.ts` | Yes (v6) | `apiBaseURL`, `apiKey`, `model`, `customModels`, `scenes` (prompt scenes), `activeSceneId`, `customPrompt` (derived from active scene), `opacity`, `dashscopeApiKey` |
+| `useSettingsStore` | `lib/store/settings.ts` | Yes (v6) | `apiBaseURL`, `apiKey`, `model`, `customModels`, `scenes` (prompt scenes), `activeSceneId`, `customPrompt` (derived from active scene), `opacity`, `showOverlayToolbar`, `toolbarHoverDelay`, `dashscopeApiKey` |
 | `useShortcutsStore` | `lib/store/shortcuts.ts` | Yes (v5) | `shortcuts` (action → key mapping with categories) |
 | `useSolutionStore` | `lib/store/solution.ts` | No | `isLoading`, `solutionChunks`, `screenshotData`, `errorMessage` |
 | `useTranscriptionStore` | `lib/store/transcription.ts` | No | `isTranscribing`, `transcriptionText`, `errorMessage` |
@@ -171,6 +177,16 @@ The app is designed to be invisible to screen-sharing software:
 - `setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true })`
 - `keepWindowInFront()` repeatedly reasserts always-on-top for 5 seconds after show
 - `showInactive()` on macOS/Windows to avoid stealing focus
+
+### Overlay Toolbar
+
+A second `BrowserWindow` (`src/main/toolbar-window.ts`) that renders the `/toolbar` route, so the shortcut actions can be driven with the mouse instead of the keyboard:
+- Owns its own visibility state: the renderer calls `setToolbarVisible()` (main page + `showOverlayToolbar` setting), main additionally requires the main window to be visible. Never call `showInactive()` on it directly — go through `showToolbar()` / `hideToolbar()`.
+- `focusable: false` so clicking a button never pulls focus away from the app underneath
+- Opacity is applied at the window level to match the main window, which applies its own via `document.body.style.opacity`
+- It is a separate renderer process, so its Zustand store is a **separate copy** that does not see changes made in the main window. Settings it needs must be pushed from main (`sync-toolbar-settings`), not read from the store.
+- Buttons carry no `title`: native tooltips are drawn outside the window and are not covered by content protection
+- `TOOLBAR_ACTIONS` (`lib/toolbar-actions.ts`) drives both the toolbar and its help page section; `triggerAction` is validated against `clickableActions` in `shortcuts.ts`
 
 ### AI Integration
 

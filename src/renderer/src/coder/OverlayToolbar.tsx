@@ -1,49 +1,92 @@
-import {
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  ArrowUp,
-  Camera,
-  ChevronDown,
-  ChevronUp,
-  CircleStop,
-  ImagePlus,
-  Mic,
-  MousePointer2,
-  Sun,
-  SunDim
-} from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { TOOLBAR_ACTIONS, type ToolbarActionName } from '@/lib/toolbar-actions'
+import type { LucideIcon } from 'lucide-react'
 
-const toolbarActions = [
-  { action: 'takeScreenshot', Icon: Camera },
-  { action: 'appendScreenshot', Icon: ImagePlus },
-  { action: 'stopSolutionStream', Icon: CircleStop },
-  { action: 'ignoreOrEnableMouse', Icon: MousePointer2 },
-  { action: 'pageUp', Icon: ChevronUp },
-  { action: 'pageDown', Icon: ChevronDown },
-  { action: 'moveMainWindowUp', Icon: ArrowUp },
-  { action: 'moveMainWindowLeft', Icon: ArrowLeft },
-  { action: 'moveMainWindowDown', Icon: ArrowDown },
-  { action: 'moveMainWindowRight', Icon: ArrowRight },
-  { action: 'increaseOpacity', Icon: Sun },
-  { action: 'decreaseOpacity', Icon: SunDim },
-  { action: 'toggleTranscription', Icon: Mic }
-] as const
-
+/**
+ * Toolbar rendered in its own always-on-top window above the main window.
+ * Buttons carry no `title`: a native tooltip would be drawn outside the window
+ * and would therefore not be covered by the window's content protection.
+ */
 export function OverlayToolbar() {
+  const [hoverDelay, setHoverDelay] = useState(0)
+
+  // This window has its own settings store copy, so main pushes the live value
+  useEffect(() => {
+    window.api.getAppSettings().then((settings) => {
+      setHoverDelay(settings.toolbarHoverDelay || 0)
+    })
+    window.api.onSyncToolbarSettings(({ hoverDelay }) => {
+      setHoverDelay(hoverDelay || 0)
+    })
+    return () => {
+      window.api.removeSyncToolbarSettingsListener()
+    }
+  }, [])
+
   return (
-    <div className="overlay-toolbar">
-      {toolbarActions.map(({ action, Icon }, index) => (
-        <Button
-          key={`${action}-${index}`}
-          variant="ghost"
-          size="icon"
-          onClick={() => void window.api.triggerAction(action)}
-        >
-          <Icon />
-        </Button>
+    <div className="overlay-toolbar overlay-toolbar-root">
+      {TOOLBAR_ACTIONS.map(({ action, Icon }) => (
+        <ToolbarButton key={action} action={action} Icon={Icon} hoverDelay={hoverDelay} />
       ))}
     </div>
+  )
+}
+
+/**
+ * Fires on click, and — when a dwell time is configured — on hovering the button
+ * for that long, which triggers the action without ever emitting a mouse click.
+ */
+function ToolbarButton({
+  action,
+  Icon,
+  hoverDelay
+}: {
+  action: ToolbarActionName
+  Icon: LucideIcon
+  hoverDelay: number
+}) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isDwelling, setIsDwelling] = useState(false)
+
+  const cancelDwell = useCallback(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+    setIsDwelling(false)
+  }, [])
+
+  // Drop a pending dwell when the setting changes or the toolbar goes away
+  useEffect(() => cancelDwell, [cancelDwell, hoverDelay])
+
+  const handleMouseEnter = () => {
+    if (!hoverDelay) return
+    setIsDwelling(true)
+    timerRef.current = setTimeout(() => {
+      timerRef.current = null
+      // Stays inert until the cursor leaves and comes back, so parking the
+      // mouse on a button cannot fire it over and over
+      setIsDwelling(false)
+      void window.api.triggerAction(action)
+    }, hoverDelay)
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={cancelDwell}
+      onClick={() => {
+        cancelDwell()
+        void window.api.triggerAction(action)
+      }}
+    >
+      <Icon />
+      {isDwelling && (
+        <span className="dwell-progress" style={{ animationDuration: `${hoverDelay}ms` }} />
+      )}
+    </Button>
   )
 }
