@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { HashRouter, Routes, Route } from 'react-router'
+import { HashRouter, Routes, Route, useLocation } from 'react-router'
 import { Toaster } from 'sonner'
 import CoderPage from '@/coder'
 import SettingsPage from '@/settings'
 import HelpPage from '@/help'
+import { OverlayToolbar } from '@/coder/OverlayToolbar'
 import { useSettingsStore } from '@/lib/store/settings'
 import { useShortcutsStore } from '@/lib/store/shortcuts'
 import { getCloneableFields } from '@/lib/utils'
@@ -50,14 +51,27 @@ export default function App() {
   return (
     <>
       <HashRouter>
+        <ToolbarVisibilityController />
         <Routes>
           <Route index element={<CoderPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="help" element={<HelpPage />} />
+          <Route path="toolbar" element={<OverlayToolbar />} />
         </Routes>
       </HashRouter>
 
       <Toaster />
     </>
   )
+}
+
+function ToolbarVisibilityController() {
+  const location = useLocation()
+
+  useEffect(() => {
+    if (location.pathname === '/toolbar') return
+    void window.api.setToolbarVisible(location.pathname === '/')
+  }, [location.pathname])
+
+  return null
 }
