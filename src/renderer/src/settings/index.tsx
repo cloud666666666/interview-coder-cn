@@ -431,7 +431,7 @@ export default function SettingsPage() {
         <div className="bg-gray-300/80 rounded-lg p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center">
             <Palette className="h-5 w-5 mr-2" />
-            外观设置
+            界面设置
           </h2>
 
           <div className="space-y-4">
@@ -473,7 +473,7 @@ export default function SettingsPage() {
             </div>
 
             {showOverlayToolbar && (
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between pl-4 border-l-2 border-gray-400/70">
                 <label className="text-sm font-medium">
                   悬停触发
                   <span className="ml-2 text-xs font-light">
