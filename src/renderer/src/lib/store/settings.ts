@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import codingPrompt from './prompts/coding.md?raw'
 import englishExamPrompt from './prompts/english-exam.md?raw'
+import aptitudeTestPrompt from './prompts/aptitude-test.md?raw'
 import generalQaPrompt from './prompts/general-qa.md?raw'
 
 export interface PromptScene {
@@ -17,6 +18,7 @@ export const CODING_SCENE_ID = 'coding'
 export const PRESET_SCENE_PROMPTS: Record<string, string> = {
   [CODING_SCENE_ID]: codingPrompt,
   'english-exam': englishExamPrompt,
+  'aptitude-test': aptitudeTestPrompt,
   'general-qa': generalQaPrompt
 }
 
@@ -31,6 +33,12 @@ const createPresetScenes = (): PromptScene[] => [
     id: 'english-exam',
     name: '英语考试',
     prompt: PRESET_SCENE_PROMPTS['english-exam'],
+    isPreset: true
+  },
+  {
+    id: 'aptitude-test',
+    name: '能力测评',
+    prompt: PRESET_SCENE_PROMPTS['aptitude-test'],
     isPreset: true
   },
   {
