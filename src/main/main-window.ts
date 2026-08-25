@@ -23,6 +23,8 @@ export function createWindow(): void {
     frame: false,
     transparent: true,
     hasShadow: false,
+    // Native resize toggling breaks transparency on Windows; renderer handles own resizing.
+    resizable: false,
     alwaysOnTop: true,
     skipTaskbar: true,
     hiddenInMissionControl: true,

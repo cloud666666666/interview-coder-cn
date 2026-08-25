@@ -46,6 +46,11 @@ const defaultShortcuts: Record<string, Omit<Shortcut, 'defaultKey'>> = {
     key: `${platformAlt}+M`,
     category: 'Window Management'
   },
+  toggleWindowResizable: {
+    action: 'toggleWindowResizable',
+    key: `${platformAlt}+R`,
+    category: 'Window Management'
+  },
   increaseOpacity: {
     action: 'increaseOpacity',
     key: `${platformAlt}+Shift+Up`,
@@ -138,7 +143,7 @@ export const useShortcutsStore = create<ShortcutsStore>()(
     }),
     {
       name: 'interview-coder-shortcuts',
-      version: 5,
+      version: 6,
       migrate: (state: unknown, version: number) => {
         if (!isPersistedShortcutsState(state) || !state.shortcuts) return state as ShortcutsStore
         // Merge in any new default shortcuts that are missing

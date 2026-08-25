@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { TOOLBAR_ACTIONS, type ToolbarActionName } from '@/lib/toolbar-actions'
 import type { LucideIcon } from 'lucide-react'
+import { WindowResizeHandles } from '@/components/WindowResizeHandles'
 
 /**
  * Toolbar rendered in its own always-on-top window above the main window.
@@ -10,14 +11,17 @@ import type { LucideIcon } from 'lucide-react'
  */
 export function OverlayToolbar() {
   const [hoverDelay, setHoverDelay] = useState(0)
+  const [resizable, setResizable] = useState(true)
 
   // This window has its own settings store copy, so main pushes the live value
   useEffect(() => {
     window.api.getAppSettings().then((settings) => {
       setHoverDelay(settings.toolbarHoverDelay || 0)
+      setResizable(settings.resizable)
     })
-    window.api.onSyncToolbarSettings(({ hoverDelay }) => {
+    window.api.onSyncToolbarSettings(({ hoverDelay, resizable }) => {
       setHoverDelay(hoverDelay || 0)
+      setResizable(resizable)
     })
     return () => {
       window.api.removeSyncToolbarSettingsListener()
@@ -29,6 +33,7 @@ export function OverlayToolbar() {
       {TOOLBAR_ACTIONS.map(({ action, Icon }) => (
         <ToolbarButton key={action} action={action} Icon={Icon} hoverDelay={hoverDelay} />
       ))}
+      <WindowResizeHandles enabled={resizable} />
     </div>
   )
 }

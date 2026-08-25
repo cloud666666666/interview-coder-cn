@@ -73,6 +73,8 @@ interface Settings {
   activeSceneId: string
 
   opacity: number
+  /** Allow resizing the main window and overlay toolbar */
+  resizable: boolean
   /** Show the click-through overlay toolbar above the main window */
   showOverlayToolbar: boolean
   /** Dwell time in ms before hovering a toolbar button fires it; 0 disables hover triggering */
@@ -110,6 +112,7 @@ const defaultSettings: Settings = {
   activeSceneId: CODING_SCENE_ID,
 
   opacity: 0.8,
+  resizable: true,
   showOverlayToolbar: true,
   toolbarHoverDelay: 1000,
 
@@ -183,9 +186,10 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'interview-coder-settings',
-      version: 8,
+      version: 9,
       migrate: (persisted, version) => {
         const state = persisted as Partial<Settings>
+        if (version < 9) state.resizable = true
         // Drop the legacy codeLanguage field (language now lives in the prompt text)
         delete (state as Record<string, unknown>).codeLanguage
         if (version < 8) {

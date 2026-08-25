@@ -2,7 +2,7 @@ import { join } from 'node:path'
 import { BrowserWindow, screen } from 'electron'
 import { is } from '@electron-toolkit/utils'
 
-const TOOLBAR_WIDTH = 504
+const TOOLBAR_WIDTH = 540
 const TOOLBAR_HEIGHT = 52
 const TOOLBAR_INSET = 4
 /** Mirrors the renderer's default opacity setting, until the renderer syncs the real one */
@@ -25,6 +25,8 @@ export function createToolbarWindow(parent: BrowserWindow): void {
     frame: false,
     transparent: true,
     hasShadow: false,
+    // Native resize toggling breaks transparency on Windows; renderer handles own resizing.
+    resizable: false,
     // Clicking a button must never pull focus away from what the user is doing
     focusable: false,
     alwaysOnTop: true,
@@ -119,9 +121,9 @@ export function setToolbarOpacity(opacity: number): void {
  * The toolbar lives in its own renderer, so it never sees the settings store
  * updates made in the main window; push the ones it needs over IPC instead.
  */
-export function syncToolbarSettings(hoverDelay: number): void {
+export function syncToolbarSettings(hoverDelay: number, resizable: boolean): void {
   if (!toolbarWindow || toolbarWindow.isDestroyed()) return
-  toolbarWindow.webContents.send('sync-toolbar-settings', { hoverDelay })
+  toolbarWindow.webContents.send('sync-toolbar-settings', { hoverDelay, resizable })
 }
 
 /** Reclaim the top spot alongside the main window, without ever revealing a hidden toolbar */
