@@ -2,8 +2,8 @@ import { join } from 'node:path'
 import { BrowserWindow, screen } from 'electron'
 import { is } from '@electron-toolkit/utils'
 
-const TOOLBAR_WIDTH = 540
-const TOOLBAR_HEIGHT = 52
+const TOOLBAR_WIDTH = 404
+const TOOLBAR_HEIGHT = 44
 const TOOLBAR_INSET = 4
 /** Mirrors the renderer's default opacity setting, until the renderer syncs the real one */
 const DEFAULT_OPACITY = 0.8
@@ -70,11 +70,13 @@ function syncToolbarBounds(): void {
 
   const mainBounds = ownerWindow.getBounds()
   const workArea = screen.getDisplayMatching(mainBounds).workArea
+  // Keep whatever size the user dragged it to; the constants only seed the window
+  const { width, height } = toolbarWindow.getBounds()
   toolbarWindow.setBounds({
-    x: Math.min(Math.max(mainBounds.x, workArea.x), workArea.x + workArea.width - TOOLBAR_WIDTH),
-    y: Math.max(workArea.y, mainBounds.y - TOOLBAR_HEIGHT - TOOLBAR_INSET),
-    width: TOOLBAR_WIDTH,
-    height: TOOLBAR_HEIGHT
+    x: Math.min(Math.max(mainBounds.x, workArea.x), workArea.x + workArea.width - width),
+    y: Math.max(workArea.y, mainBounds.y - height - TOOLBAR_INSET),
+    width,
+    height
   })
 }
 
@@ -121,9 +123,9 @@ export function setToolbarOpacity(opacity: number): void {
  * The toolbar lives in its own renderer, so it never sees the settings store
  * updates made in the main window; push the ones it needs over IPC instead.
  */
-export function syncToolbarSettings(hoverDelay: number, resizable: boolean): void {
+export function syncToolbarSettings(hoverDelay: number): void {
   if (!toolbarWindow || toolbarWindow.isDestroyed()) return
-  toolbarWindow.webContents.send('sync-toolbar-settings', { hoverDelay, resizable })
+  toolbarWindow.webContents.send('sync-toolbar-settings', { hoverDelay })
 }
 
 /** Reclaim the top spot alongside the main window, without ever revealing a hidden toolbar */

@@ -186,10 +186,9 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'interview-coder-settings',
-      version: 9,
+      version: 8,
       migrate: (persisted, version) => {
         const state = persisted as Partial<Settings>
-        if (version < 9) state.resizable = true
         // Drop the legacy codeLanguage field (language now lives in the prompt text)
         delete (state as Record<string, unknown>).codeLanguage
         if (version < 8) {

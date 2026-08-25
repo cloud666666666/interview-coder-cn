@@ -9,18 +9,16 @@ export function WindowResizeHandles({ enabled }: { enabled: boolean }) {
 
   const startResize = (event: ReactPointerEvent<HTMLDivElement>, direction: ResizeDirection) => {
     if (event.button !== 0) return
+    // Main follows the cursor from here on; capture is only to keep the pointerup
+    // coming back to this element, and is allowed to fail (it does on macOS panels)
     event.currentTarget.setPointerCapture(event.pointerId)
-    window.api.startWindowResize(direction, event.screenX, event.screenY)
-  }
-
-  const moveResize = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
-    window.api.moveWindowResize(event.screenX, event.screenY)
+    window.api.startWindowResize(direction)
   }
 
   const stopResize = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!event.currentTarget.hasPointerCapture(event.pointerId)) return
-    event.currentTarget.releasePointerCapture(event.pointerId)
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId)
+    }
     window.api.stopWindowResize()
   }
 
@@ -29,7 +27,6 @@ export function WindowResizeHandles({ enabled }: { enabled: boolean }) {
       key={direction}
       className={`window-resize-handle window-resize-${direction}`}
       onPointerDown={(event) => startResize(event, direction)}
-      onPointerMove={moveResize}
       onPointerUp={stopResize}
       onPointerCancel={stopResize}
     />

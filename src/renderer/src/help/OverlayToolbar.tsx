@@ -16,7 +16,7 @@ export function OverlayToolbarHelp() {
       </p>
       <div className="overlay-toolbar w-fit">
         {TOOLBAR_ACTIONS.map(({ action, Icon }) => (
-          <div key={action} className="flex size-8 items-center justify-center">
+          <div key={action} className="flex size-7 items-center justify-center">
             <Icon className="size-4" />
           </div>
         ))}
@@ -43,6 +43,7 @@ export function OverlayToolbarHelp() {
           悬停触发」中可以改为：鼠标在按钮上停留一段时间即触发，全程不产生点击。
           停留过程中按钮下方会有进度条，中途移开即取消；触发后需移开再移回才会再次触发。
         </li>
+        <li>拖动工具条的边缘或四角可以调整它的大小。边缘不会出现缩放光标，但照样可以拖。</li>
         <li>隐藏/显示主窗口没有做成按钮：窗口隐藏后工具条也会一起隐藏，只能用快捷键唤回。</li>
         <li>如不需要，可在「设置 → 界面设置 → 悬浮工具条」中关闭。</li>
       </ul>

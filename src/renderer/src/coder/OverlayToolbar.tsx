@@ -11,17 +11,14 @@ import { WindowResizeHandles } from '@/components/WindowResizeHandles'
  */
 export function OverlayToolbar() {
   const [hoverDelay, setHoverDelay] = useState(0)
-  const [resizable, setResizable] = useState(true)
 
   // This window has its own settings store copy, so main pushes the live value
   useEffect(() => {
     window.api.getAppSettings().then((settings) => {
       setHoverDelay(settings.toolbarHoverDelay || 0)
-      setResizable(settings.resizable)
     })
-    window.api.onSyncToolbarSettings(({ hoverDelay, resizable }) => {
+    window.api.onSyncToolbarSettings(({ hoverDelay }) => {
       setHoverDelay(hoverDelay || 0)
-      setResizable(resizable)
     })
     return () => {
       window.api.removeSyncToolbarSettingsListener()
@@ -33,7 +30,8 @@ export function OverlayToolbar() {
       {TOOLBAR_ACTIONS.map(({ action, Icon }) => (
         <ToolbarButton key={action} action={action} Icon={Icon} hoverDelay={hoverDelay} />
       ))}
-      <WindowResizeHandles enabled={resizable} />
+      {/* Always on: main.css keeps these edges from ever showing a resize cursor */}
+      <WindowResizeHandles enabled />
     </div>
   )
 }

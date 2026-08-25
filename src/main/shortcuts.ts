@@ -519,12 +519,6 @@ const callbacks: Record<string, () => void> = {
     mainWindow.webContents.send('sync-app-state', state)
   },
 
-  toggleWindowResizable: () => {
-    const mainWindow = global.mainWindow
-    if (!mainWindow || mainWindow.isDestroyed()) return
-    mainWindow.webContents.send('toggle-window-resizable')
-  },
-
   increaseOpacity: () => {
     adjustOpacity(OPACITY_STEP)
   },
@@ -592,7 +586,6 @@ const clickableActions = new Set([
   'appendScreenshot',
   'stopSolutionStream',
   'ignoreOrEnableMouse',
-  'toggleWindowResizable',
   'increaseOpacity',
   'decreaseOpacity',
   'pageUp',

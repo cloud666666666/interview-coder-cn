@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain, type Rectangle } from 'electron'
+import { BrowserWindow, ipcMain, screen, type Rectangle } from 'electron'
 
 export type ResizeDirection = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
 
@@ -8,26 +8,76 @@ type ResizeState = {
   startX: number
   startY: number
   bounds: Rectangle
+  lastX: number
+  lastY: number
 }
 
 const MIN_WIDTH = 200
-const MIN_HEIGHT = 52
-let resizeState: ResizeState | null = null
+/** Low enough to still allow shrinking the toolbar, high enough to keep its buttons visible */
+const MIN_HEIGHT = 36
+/** Cursor sampling interval while dragging, roughly one frame */
+const POLL_INTERVAL = 16
+/** Only the renderer can end a drag, so never follow the cursor indefinitely */
+const MAX_DRAG_DURATION = 30_000
 
-ipcMain.on('window-resize-start', (event, direction: ResizeDirection, x: number, y: number) => {
+let resizeState: ResizeState | null = null
+let pollTimer: ReturnType<typeof setInterval> | null = null
+let safetyTimer: ReturnType<typeof setTimeout> | null = null
+
+/**
+ * The cursor is sampled here instead of being sent from the renderer: the overlay
+ * toolbar is a non-activating panel on macOS and never receives the pointer moves
+ * of a drag, so renderer-side tracking silently does nothing there. A pointerdown
+ * and a pointerup are all the renderer has to deliver.
+ */
+ipcMain.on('window-resize-start', (event, direction: ResizeDirection) => {
   const window = BrowserWindow.fromWebContents(event.sender)
   if (!window || window.isDestroyed()) return
-  resizeState = { window, direction, startX: x, startY: y, bounds: window.getBounds() }
-})
 
-ipcMain.on('window-resize-move', (event, x: number, y: number) => {
-  if (!resizeState || resizeState.window.webContents !== event.sender) return
-  resizeState.window.setBounds(resizeBounds(resizeState, x, y))
+  const { x, y } = screen.getCursorScreenPoint()
+  resizeState = {
+    window,
+    direction,
+    startX: x,
+    startY: y,
+    bounds: window.getBounds(),
+    lastX: x,
+    lastY: y
+  }
+
+  stopTimers()
+  pollTimer = setInterval(trackCursor, POLL_INTERVAL)
+  safetyTimer = setTimeout(stopResize, MAX_DRAG_DURATION)
 })
 
 ipcMain.on('window-resize-stop', (event) => {
-  if (resizeState?.window.webContents === event.sender) resizeState = null
+  if (resizeState?.window.webContents === event.sender) stopResize()
 })
+
+function trackCursor(): void {
+  if (!resizeState || resizeState.window.isDestroyed()) {
+    stopResize()
+    return
+  }
+
+  const { x, y } = screen.getCursorScreenPoint()
+  if (x === resizeState.lastX && y === resizeState.lastY) return
+  resizeState.lastX = x
+  resizeState.lastY = y
+  resizeState.window.setBounds(resizeBounds(resizeState, x, y))
+}
+
+function stopResize(): void {
+  stopTimers()
+  resizeState = null
+}
+
+function stopTimers(): void {
+  if (pollTimer) clearInterval(pollTimer)
+  if (safetyTimer) clearTimeout(safetyTimer)
+  pollTimer = null
+  safetyTimer = null
+}
 
 function resizeBounds(state: ResizeState, x: number, y: number): Rectangle {
   const { bounds, direction, startX, startY } = state

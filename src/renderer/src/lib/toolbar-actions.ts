@@ -10,7 +10,6 @@ import {
   ImagePlus,
   Mic,
   MousePointer2,
-  Scaling,
   Sun,
   SunDim,
   type LucideIcon
@@ -37,7 +36,6 @@ export const TOOLBAR_ACTIONS: ToolbarAction[] = [
   { action: 'appendScreenshot', Icon: ImagePlus, label: '追加截图' },
   { action: 'stopSolutionStream', Icon: CircleStop, label: '停止生成' },
   { action: 'ignoreOrEnableMouse', Icon: MousePointer2, label: '切换鼠标穿透' },
-  { action: 'toggleWindowResizable', Icon: Scaling, label: '切换窗口大小调整' },
   { action: 'pageUp', Icon: ChevronUp, label: '向上翻页' },
   { action: 'pageDown', Icon: ChevronDown, label: '向下翻页' },
   { action: 'moveMainWindowUp', Icon: ArrowUp, label: '向上移动窗口' },

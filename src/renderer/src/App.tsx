@@ -53,7 +53,7 @@ export default function App() {
     <>
       <HashRouter>
         <ToolbarVisibilityController />
-        <WindowResizeController initialized={initialized} />
+        <WindowResizeController />
         <Routes>
           <Route index element={<CoderPage />} />
           <Route path="settings" element={<SettingsPage />} />
@@ -67,18 +67,10 @@ export default function App() {
   )
 }
 
-function WindowResizeController({ initialized }: { initialized: boolean }) {
+/** The toolbar window renders its own handles; this covers the main window's routes */
+function WindowResizeController() {
   const location = useLocation()
   const resizable = useSettingsStore((state) => state.resizable)
-  const updateSetting = useSettingsStore((state) => state.updateSetting)
-
-  useEffect(() => {
-    if (!initialized || location.pathname === '/toolbar') return
-    window.api.onToggleWindowResizable(() =>
-      updateSetting('resizable', !useSettingsStore.getState().resizable)
-    )
-    return window.api.removeToggleWindowResizableListener
-  }, [initialized, location.pathname, updateSetting])
 
   if (location.pathname === '/toolbar') return null
   return <WindowResizeHandles enabled={resizable} />

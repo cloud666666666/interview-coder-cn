@@ -461,9 +461,9 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">
-                允许调整窗口大小
+                允许调整主窗口大小
                 <span className="ml-2 text-xs font-light">
-                  同时应用于主窗口和上方悬浮工具条
+                  关闭后鼠标移到窗口边缘不再出现缩放光标
                 </span>
               </label>
               <Switch

@@ -12,20 +12,9 @@ const api = {
     ipcRenderer.invoke('updateAppSettings', settings),
 
   // Resize transparent frameless windows without toggling Electron's native resizable style
-  startWindowResize: (
-    direction: 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw',
-    screenX: number,
-    screenY: number
-  ) => ipcRenderer.send('window-resize-start', direction, screenX, screenY),
-  moveWindowResize: (screenX: number, screenY: number) =>
-    ipcRenderer.send('window-resize-move', screenX, screenY),
+  startWindowResize: (direction: 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw') =>
+    ipcRenderer.send('window-resize-start', direction),
   stopWindowResize: () => ipcRenderer.send('window-resize-stop'),
-  onToggleWindowResizable: (callback: () => void) => {
-    ipcRenderer.on('toggle-window-resizable', callback)
-  },
-  removeToggleWindowResizableListener: () => {
-    ipcRenderer.removeAllListeners('toggle-window-resizable')
-  },
 
   // Update app state
   updateAppState: (state: Partial<AppState>) => ipcRenderer.invoke('updateAppState', state),
@@ -56,7 +45,6 @@ const api = {
       | 'appendScreenshot'
       | 'stopSolutionStream'
       | 'ignoreOrEnableMouse'
-      | 'toggleWindowResizable'
       | 'increaseOpacity'
       | 'decreaseOpacity'
       | 'pageUp'
@@ -71,9 +59,7 @@ const api = {
   setToolbarVisible: (visible: boolean) => ipcRenderer.invoke('setToolbarVisible', visible),
 
   // Settings the toolbar window needs, pushed from main (its own store is a separate copy)
-  onSyncToolbarSettings: (
-    callback: (settings: { hoverDelay: number; resizable: boolean }) => void
-  ) => {
+  onSyncToolbarSettings: (callback: (settings: { hoverDelay: number }) => void) => {
     ipcRenderer.on('sync-toolbar-settings', (_event, settings) => {
       callback(settings)
     })
