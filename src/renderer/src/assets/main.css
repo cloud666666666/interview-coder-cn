@@ -65,6 +65,66 @@
   }
 }
 
+.window-resize-handle {
+  position: fixed;
+  z-index: 2147483647;
+  -webkit-app-region: no-drag;
+  touch-action: none;
+}
+.window-resize-n,
+.window-resize-s {
+  left: 10px;
+  right: 10px;
+  height: 6px;
+  cursor: ns-resize;
+}
+.window-resize-e,
+.window-resize-w {
+  top: 10px;
+  bottom: 10px;
+  width: 6px;
+  cursor: ew-resize;
+}
+.window-resize-n {
+  top: 0;
+}
+.window-resize-s {
+  bottom: 0;
+}
+.window-resize-e {
+  right: 0;
+}
+.window-resize-w {
+  left: 0;
+}
+.window-resize-ne,
+.window-resize-se,
+.window-resize-sw,
+.window-resize-nw {
+  width: 10px;
+  height: 10px;
+}
+.window-resize-ne {
+  top: 0;
+  right: 0;
+  cursor: nesw-resize;
+}
+.window-resize-se {
+  right: 0;
+  bottom: 0;
+  cursor: nwse-resize;
+}
+.window-resize-sw {
+  bottom: 0;
+  left: 0;
+  cursor: nesw-resize;
+}
+.window-resize-nw {
+  top: 0;
+  left: 0;
+  cursor: nwse-resize;
+}
+
 /* The toolbar window holds nothing but the toolbar, so it must never scroll */
 body:has(.overlay-toolbar-root) {
   overflow: hidden;

@@ -67,6 +67,11 @@ export function CustomShortcuts() {
             shortcut="ignoreOrEnableMouse"
           />
           <Shortcut
+            label="调整窗口大小"
+            description="开启或关闭主窗口和上方悬浮工具条的边缘拖动调整"
+            shortcut="toggleWindowResizable"
+          />
+          <Shortcut
             label="提高不透明度"
             description="每次调整 5%，窗口更清晰"
             shortcut="increaseOpacity"

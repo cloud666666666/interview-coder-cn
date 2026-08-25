@@ -13,8 +13,8 @@ ipcMain.handle('updateAppSettings', (_event, _settings) => {
   if ('opacity' in _settings) {
     setToolbarOpacity(settings.opacity)
   }
-  if ('toolbarHoverDelay' in _settings) {
-    syncToolbarSettings(settings.toolbarHoverDelay)
+  if ('toolbarHoverDelay' in _settings || 'resizable' in _settings) {
+    syncToolbarSettings(settings.toolbarHoverDelay, settings.resizable)
   }
 })
 
@@ -46,10 +46,11 @@ export const settings = {
   customPrompt: '',
   /** Kept in sync with the renderer so the overlay toolbar can match the main window */
   opacity: 0.8,
+  /** Renderer owns this preference; the default is enabled */
+  resizable: true,
   /**
    * Dwell time in ms before hovering a toolbar button fires it; 0 disables hover
-   * triggering. The real default lives in the renderer store: App.tsx fills blank
-   * renderer fields from here, so a truthy default would overwrite a user's "off".
+   * triggering. The renderer owns the persisted value and syncs it here.
    */
   toolbarHoverDelay: 0,
   screenshotAutoSave: false,

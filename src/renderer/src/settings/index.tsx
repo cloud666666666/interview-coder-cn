@@ -50,6 +50,7 @@ import {
 export default function SettingsPage() {
   const {
     opacity,
+    resizable,
     showOverlayToolbar,
     toolbarHoverDelay,
     apiBaseURL,
@@ -456,6 +457,20 @@ export default function SettingsPage() {
                 />
                 <span className="text-xs whitespace-nowrap">不透明</span>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                允许调整窗口大小
+                <span className="ml-2 text-xs font-light">
+                  同时应用于主窗口和上方悬浮工具条
+                </span>
+              </label>
+              <Switch
+                className="scale-y-90"
+                checked={resizable}
+                onCheckedChange={(checked) => updateSetting('resizable', checked)}
+              />
             </div>
 
             <div className="flex items-center justify-between">
