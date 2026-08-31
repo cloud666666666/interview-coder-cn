@@ -33,7 +33,12 @@ export function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      // Soft-hide parks the window off-screen, which makes Windows report the
+      // window as occluded; with throttling on, the renderer freezes until the
+      // window is focused again (queued IPC flushes on click, toolbar hover
+      // dwell timers never fire).
+      backgroundThrottling: false
     }
   })
 
