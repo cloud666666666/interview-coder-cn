@@ -57,6 +57,9 @@ function composeCustomPrompt(scenes: PromptScene[], activeSceneId: string): stri
   return scene.prompt.trim() || PRESET_SCENE_PROMPTS[scene.id] || ''
 }
 
+/** How captured screenshots are shown on the main page, ordered by how much room they take */
+export type ScreenshotDisplay = 'none' | 'count' | 'gallery'
+
 export const OPACITY_MIN = 0.1
 export const OPACITY_MAX = 1
 export const OPACITY_STEP = 0.05
@@ -79,6 +82,8 @@ interface Settings {
   showOverlayToolbar: boolean
   /** Dwell time in ms before hovering a toolbar button fires it; 0 disables hover triggering */
   toolbarHoverDelay: number
+  /** How the captured screenshots are shown above the solution */
+  screenshotDisplay: ScreenshotDisplay
 
   screenshotAutoSave: boolean
   screenshotDir: string
@@ -115,6 +120,7 @@ const defaultSettings: Settings = {
   resizable: true,
   showOverlayToolbar: true,
   toolbarHoverDelay: 1000,
+  screenshotDisplay: 'gallery',
 
   screenshotAutoSave: false,
   screenshotDir: '',

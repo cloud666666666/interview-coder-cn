@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils'
 import {
   useSettingsStore,
   PRESET_SCENE_PROMPTS,
+  type ScreenshotDisplay,
   OPACITY_MIN,
   OPACITY_MAX,
   OPACITY_STEP
@@ -53,6 +54,7 @@ export default function SettingsPage() {
     resizable,
     showOverlayToolbar,
     toolbarHoverDelay,
+    screenshotDisplay,
     apiBaseURL,
     apiKey,
     model,
@@ -471,6 +473,30 @@ export default function SettingsPage() {
                 checked={resizable}
                 onCheckedChange={(checked) => updateSetting('resizable', checked)}
               />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium">
+                截图展示方式
+                <span className="ml-2 text-xs font-light">
+                  主界面上截图占多大位置；无论选哪种，截图都会正常发送给 AI
+                </span>
+              </label>
+              <Select
+                value={screenshotDisplay}
+                onValueChange={(val) =>
+                  updateSetting('screenshotDisplay', val as ScreenshotDisplay)
+                }
+              >
+                <SelectTrigger className="w-60 bg-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">不展示</SelectItem>
+                  <SelectItem value="count">卡片显示截图数量</SelectItem>
+                  <SelectItem value="gallery">显示全部缩略图（默认）</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">

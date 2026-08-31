@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Images } from 'lucide-react'
+import { useSettingsStore, type ScreenshotDisplay } from '@/lib/store/settings'
 import { useShortcutsStore } from '@/lib/store/shortcuts'
 import { useSolutionStore } from '@/lib/store/solution'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
@@ -17,6 +19,8 @@ export function AppContent() {
     setErrorMessage,
     clearSolution
   } = useSolutionStore()
+
+  const screenshotDisplay = useSettingsStore((state) => state.screenshotDisplay)
 
   const [recentScreenshots, setRecentScreenshots] = useState<string[]>([])
 
@@ -110,6 +114,10 @@ export function AppContent() {
     }
   }, [])
 
+  // `screenshot-taken` can land a frame before `screenshots-updated`, so fall back to the single one
+  const screenshots =
+    recentScreenshots.length > 0 ? recentScreenshots : screenshotData ? [screenshotData] : []
+
   return (
     <div id="app-content" className="px-6 py-4">
       {/* Error Banner */}
@@ -149,33 +157,49 @@ export function AppContent() {
         </div>
       )}
 
-      {/* Screenshot Gallery */}
-      {recentScreenshots.length > 0 ? (
-        <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
-          {recentScreenshots.map((data, index) => (
-            <img
-              key={index}
-              src={`data:image/png;base64,${data}`}
-              alt={`Screenshot ${index + 1}`}
-              className="w-40 h-auto flex-shrink-0 border border-gray-600 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
-              title={`第 ${index + 1} 张截图`}
-            />
-          ))}
-        </div>
-      ) : screenshotData ? (
-        <div className="mb-4">
-          <img
-            src={`data:image/png;base64,${screenshotData}`}
-            alt="Screenshot"
-            className="w-40 h-auto border border-gray-600 rounded-lg shadow-lg"
-          />
-        </div>
-      ) : (
+      {/* Screenshots, rendered as the `screenshotDisplay` setting asks */}
+      {screenshots.length === 0 ? (
         <ShortcutTip />
+      ) : (
+        <Screenshots screenshots={screenshots} display={screenshotDisplay} />
       )}
 
       {/* Solution Display */}
       <MarkdownRenderer>{solutionChunks.join('')}</MarkdownRenderer>
+    </div>
+  )
+}
+
+function Screenshots({
+  screenshots,
+  display
+}: {
+  screenshots: string[]
+  display: ScreenshotDisplay
+}) {
+  if (display === 'none') return null
+
+  if (display === 'count') {
+    // The content area sits on bg-gray-500, so the card reads light-on-dark like the prose
+    return (
+      <div className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/10 px-2.5 py-1 text-sm text-gray-100 select-none">
+        <Images className="h-4 w-4" />
+        {screenshots.length} 张截图
+      </div>
+    )
+  }
+
+  return (
+    <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
+      {screenshots.map((data, index) => (
+        <img
+          key={index}
+          src={`data:image/png;base64,${data}`}
+          alt={`Screenshot ${index + 1}`}
+          className="w-40 h-auto flex-shrink-0 border border-gray-600 rounded-lg shadow-lg hover:shadow-xl transition-shadow"
+          title={`第 ${index + 1} 张截图`}
+        />
+      ))}
     </div>
   )
 }
