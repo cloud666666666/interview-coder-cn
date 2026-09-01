@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { Button } from '@/components/ui/button'
 import { TOOLBAR_ACTIONS, type ToolbarActionName } from '@/lib/toolbar-actions'
 import type { LucideIcon } from 'lucide-react'
 import { WindowResizeHandles } from '@/components/WindowResizeHandles'
+
+/** Mirrors `.overlay-toolbar` in main.css: `p-2` around `size-7` buttons with `gap-0.5` */
+const BAR_PADDING = 8
+const BUTTON_SIZE = 28
+const BUTTON_GAP = 2
 
 /**
  * Toolbar rendered in its own always-on-top window above the main window.
@@ -11,6 +16,8 @@ import { WindowResizeHandles } from '@/components/WindowResizeHandles'
  */
 export function OverlayToolbar() {
   const [hoverDelay, setHoverDelay] = useState(0)
+  const barRef = useRef<HTMLDivElement>(null)
+  const visibleCount = useVisibleActionCount(barRef)
 
   // This window has its own settings store copy, so main pushes the live value
   useEffect(() => {
@@ -26,14 +33,42 @@ export function OverlayToolbar() {
   }, [])
 
   return (
-    <div className="overlay-toolbar overlay-toolbar-root">
-      {TOOLBAR_ACTIONS.map(({ action, Icon }) => (
+    <div ref={barRef} className="overlay-toolbar overlay-toolbar-root">
+      {TOOLBAR_ACTIONS.slice(0, visibleCount).map(({ action, Icon }) => (
         <ToolbarButton key={action} action={action} Icon={Icon} hoverDelay={hoverDelay} />
       ))}
       {/* Always on: main.css keeps these edges from ever showing a resize cursor */}
       <WindowResizeHandles enabled />
     </div>
   )
+}
+
+/**
+ * Buttons keep their size when the toolbar window is resized; the ones that no
+ * longer fit are dropped from the end, so a narrowed toolbar never shows a
+ * sliver of a button. The bar's own width never depends on its children, so
+ * measuring it here cannot feed back into the layout.
+ */
+function useVisibleActionCount(barRef: RefObject<HTMLDivElement | null>): number {
+  const [count, setCount] = useState(TOOLBAR_ACTIONS.length)
+
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar) return
+
+    const measure = () => {
+      const available = bar.clientWidth - BAR_PADDING * 2
+      const fits = Math.floor((available + BUTTON_GAP) / (BUTTON_SIZE + BUTTON_GAP))
+      setCount(Math.min(TOOLBAR_ACTIONS.length, Math.max(1, fits)))
+    }
+
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(bar)
+    return () => observer.disconnect()
+  }, [barRef])
+
+  return count
 }
 
 /**

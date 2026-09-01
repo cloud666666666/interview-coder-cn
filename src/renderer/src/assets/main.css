@@ -135,6 +135,16 @@ body:has(.overlay-toolbar-root) {
 }
 
 /*
+ * Resizing the toolbar window never rescales its buttons: the bar simply takes
+ * the whole window, and OverlayToolbar drops the buttons that no longer fit.
+ * `overflow` is the backstop for the rounding the button count cannot cover.
+ */
+.overlay-toolbar-root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+/*
  * The toolbar can always be resized, but its edges must stay silent: a resize
  * cursor flickering under the pointer is the very thing the main window's
  * setting exists to avoid. macOS suppresses it anyway (it only updates the
