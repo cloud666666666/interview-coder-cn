@@ -1,7 +1,6 @@
 import { join } from 'node:path'
 import { shell, BrowserWindow } from 'electron'
 import { is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
 import { createToolbarWindow } from './toolbar-window'
 
 export function applyContentProtection(window: BrowserWindow, forceReset = false): void {
@@ -30,7 +29,6 @@ export function createWindow(): void {
     hiddenInMissionControl: true,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,

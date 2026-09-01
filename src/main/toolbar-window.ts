@@ -114,7 +114,7 @@ export function setToolbarWanted(wanted: boolean): void {
 /**
  * Keep the toolbar as translucent as the main window. The main window applies
  * opacity to its body via CSS; the toolbar is nothing but that bar, so the same
- * value is applied to the whole window (no-op on Linux).
+ * value is applied to the whole window.
  */
 export function setToolbarOpacity(opacity: number): void {
   toolbarOpacity = opacity

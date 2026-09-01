@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Package Electron app
-        run: npm run build:${{ matrix.os == 'windows-latest' && 'win' || (matrix.os == 'macos-latest' && 'mac' || 'linux') }}
+        run: npm run build:${{ matrix.os == 'windows-latest' && 'win' || 'mac' }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
