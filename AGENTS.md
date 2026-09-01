@@ -40,6 +40,7 @@ src/
 │   ├── state.ts             # App state object + IPC handlers
 │   ├── take-screenshot.ts   # desktopCapturer → base64 PNG
 │   ├── transcription.ts     # DashScope WebSocket real-time speech-to-text
+│   ├── window-resize.ts     # Cursor-tracking resize for the frameless windows
 │   ├── auto-updater.ts      # electron-updater (non-macOS only)
 │   └── index.d.ts           # global.mainWindow type declaration
 ├── preload/
@@ -71,11 +72,12 @@ src/
         ├── components/
         │   ├── MarkdownRenderer.tsx   # react-markdown + remark-gfm + rehype-highlight
         │   ├── ShortcutRenderer.tsx   # Platform-aware shortcut key badges
+        │   ├── WindowResizeHandles.tsx # Edge/corner drag targets that drive window-resize.ts
         │   └── ui/           # shadcn/ui primitives (button, dialog, select, etc.)
         ├── lib/
         │   ├── store/        # Zustand stores
         │   │   ├── app.ts       # ignoreMouse state, synced from main process
-        │   │   ├── settings.ts  # API config, model, prompt scenes, opacity, toolbar (persisted v6)
+        │   │   ├── settings.ts  # API config, model, prompt scenes, opacity, toolbar (persisted v8)
         │   │   ├── shortcuts.ts # Shortcut bindings (persisted v5, with migration)
         │   │   ├── solution.ts  # Loading state, solution chunks, screenshots, errors
         │   │   └── transcription.ts # Transcription state: isTranscribing, text, error
@@ -142,12 +144,13 @@ src/
 - `stopSolutionStream` — abort current AI stream
 - `sendFollowUpQuestion` — follow-up within conversation
 - `triggerAction` / `setToolbarVisible` — overlay toolbar: run a shortcut action, toggle the window
+- `window-resize-start` / `window-resize-stop` (`send`, not `invoke`) — begin/end a cursor-tracked window resize
 - `start-transcription` / `stop-transcription` — speech transcription lifecycle
 - `get-transcription-text` / `clear-transcription-text` — read/clear accumulated text
 
 **Main → Renderer (send):**
 - `sync-app-state` — push state changes (e.g., mouse ignore toggle)
-- `screenshot-taken` / `screenshots-updated` — screenshot data
+- `screenshot-taken` / `screenshots-updated` — screenshot data (`screenshots-updated` also carries the untruncated conversation total)
 - `solution-clear` / `solution-chunk` / `solution-complete` / `solution-stopped` / `solution-error` — AI streaming lifecycle
 - `ai-loading-start` / `ai-loading-end` — loading state
 - `scroll-page-up` / `scroll-page-down` — keyboard-driven scroll
@@ -159,13 +162,15 @@ src/
 
 | Store | File | Persisted | Key State |
 |-------|------|-----------|-----------|
-| `useSettingsStore` | `lib/store/settings.ts` | Yes (v6) | `apiBaseURL`, `apiKey`, `model`, `customModels`, `scenes` (prompt scenes), `activeSceneId`, `customPrompt` (derived from active scene), `opacity`, `showOverlayToolbar`, `toolbarHoverDelay`, `dashscopeApiKey` |
+| `useSettingsStore` | `lib/store/settings.ts` | Yes (v8) | `apiBaseURL`, `apiKey`, `model`, `customModels`, `scenes` (prompt scenes), `activeSceneId`, `customPrompt` (derived from active scene), `opacity`, `resizable`, `showOverlayToolbar`, `toolbarHoverDelay`, `screenshotDisplay`, `dashscopeApiKey` |
 | `useShortcutsStore` | `lib/store/shortcuts.ts` | Yes (v5) | `shortcuts` (action → key mapping with categories) |
 | `useSolutionStore` | `lib/store/solution.ts` | No | `isLoading`, `solutionChunks`, `screenshotData`, `errorMessage` |
 | `useTranscriptionStore` | `lib/store/transcription.ts` | No | `isTranscribing`, `transcriptionText`, `errorMessage` |
 | `useAppStore` | `lib/store/app.ts` | No | `ignoreMouse` |
 
 Settings are bidirectionally synced: renderer persists to localStorage, and on mount syncs to main process via `updateAppSettings()`. Main process `.env` values serve as initial defaults only.
+
+Adding a settings key needs no `version` bump: zustand shallow-merges the persisted object over the defaults, so a key missing from localStorage falls back to its default. Bump `version` only when an existing key changes shape or meaning.
 
 ## Key Patterns & Conventions
 
@@ -187,6 +192,16 @@ A second `BrowserWindow` (`src/main/toolbar-window.ts`) that renders the `/toolb
 - It is a separate renderer process, so its Zustand store is a **separate copy** that does not see changes made in the main window. Settings it needs must be pushed from main (`sync-toolbar-settings`), not read from the store.
 - Buttons carry no `title`: native tooltips are drawn outside the window and are not covered by content protection
 - `TOOLBAR_ACTIONS` (`lib/toolbar-actions.ts`) drives both the toolbar and its help page section; `triggerAction` is validated against `clickableActions` in `shortcuts.ts`
+- Resizing the toolbar window never rescales its buttons: `OverlayToolbar` measures the bar and renders only the actions that fit, dropping the rest from the end
+
+### Window Resizing
+
+Both windows are created with `resizable: false` — toggling Electron's native resizable style breaks transparency on Windows — so resizing is implemented by hand:
+- `WindowResizeHandles` renders eight fixed-position edge/corner divs and sends only `window-resize-start` (pointerdown) and `window-resize-stop`
+- `src/main/window-resize.ts` then polls `screen.getCursorScreenPoint()` and calls `setBounds()`. The cursor is sampled in main because the toolbar is a non-activating panel on macOS and never receives a drag's pointer moves
+- The drag is ended by a `window`-level `pointerup`/`pointercancel`/`blur` listener, with a 30s safety timeout in main as the last resort
+- The handles sit at `z-index: 2147483647`; anything flush against a window edge (e.g. `#app-header .actions`) must raise itself above them or it becomes unclickable
+- The main window's handles are gated by the `resizable` setting; the toolbar's are always on, with the resize cursor suppressed in `main.css`
 
 ### AI Integration
 
@@ -220,7 +235,7 @@ A second `BrowserWindow` (`src/main/toolbar-window.ts`) that renders the `/toolb
 - Renderer stores shortcut config in Zustand (persisted); sends to main on init
 - On Windows, `Alt`-based shortcuts also register `Ctrl+Alt` variant for compatibility
 - Shortcut actions are string-keyed callbacks in `shortcuts.ts`
-- Default shortcuts use `platformAlt` (`Alt` on macOS, `CommandOrControl` on Windows/Linux)
+- Default shortcuts use `platformAlt` (`Alt` on macOS, `CommandOrControl` on Windows)
 
 ### UI Component Patterns
 
@@ -282,6 +297,10 @@ These are read by dotenv in the main process and merged with renderer-side setti
 
 6. **Streaming orchestration is in `shortcuts.ts`**: Despite the filename, this 580+ line file is the central orchestrator for both global shortcuts AND AI streaming logic. It manages conversation history, abort controllers, and IPC communication for the entire AI workflow.
 
-7. **Window movement**: The window can be moved via keyboard shortcuts in 200px steps (up/down/left/right).
+7. **Window movement**: The window can be moved via keyboard shortcuts in 200px steps (up/down/left/right), and resized by dragging its edges (see Window Resizing).
 
 8. **macOS auto-update is disabled**: `publish: null` in electron-builder.yml for mac target. Auto-update only works on Windows.
+
+9. **macOS and Windows only**: Linux is not a supported or built target.
+
+10. **Prompt files are Prettier-ignored**: `src/renderer/src/lib/store/prompts/` is listed in `.prettierignore` — Prettier rewrites the literal ``` fences inside those prompts, which changes what the model is told.

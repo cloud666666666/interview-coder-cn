@@ -1,0 +1,7 @@
+out
+dist
+node_modules
+
+# Prompt text sent verbatim to the model — Prettier rewrites the literal
+# ``` fences inside them into inline code, which changes what the AI is told
+src/renderer/src/lib/store/prompts
