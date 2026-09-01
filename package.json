@@ -1,6 +1,6 @@
 {
   "name": "interview-coder-cn",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "截屏解题助手，实时截屏并生成解题思路和答案",
   "main": "./out/main/index.js",
   "devEngines": {
@@ -21,8 +21,7 @@
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:mac": "electron-vite build && electron-builder --mac"
   },
   "repository": {
     "type": "git",
