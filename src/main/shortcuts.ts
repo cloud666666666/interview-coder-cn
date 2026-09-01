@@ -83,6 +83,8 @@ let currentStreamContext: StreamContext | null = null
 // Conversation history tracking
 let conversationMessages: ModelMessage[] = []
 let recentScreenshots: string[] = [] // 最近截图，水平预览 (限5张)
+/** Every screenshot in the current conversation, including the ones dropped from the preview */
+let screenshotCount = 0
 let hasAppendSeparator = false
 
 const FRONT_REASSERT_DURATION = 8000
@@ -308,9 +310,10 @@ const callbacks: Record<string, () => void> = {
       }
       currentStreamContext = streamContext
       recentScreenshots = [screenshotData]
+      screenshotCount = 1
       hasAppendSeparator = false
       mainWindow.webContents.send('solution-clear')
-      mainWindow.webContents.send('screenshots-updated', recentScreenshots)
+      mainWindow.webContents.send('screenshots-updated', recentScreenshots, screenshotCount)
       mainWindow.webContents.send('screenshot-taken', screenshotData)
       mainWindow.webContents.send('ai-loading-start')
       loadingStarted = true
@@ -428,8 +431,9 @@ const callbacks: Record<string, () => void> = {
 
       recentScreenshots.push(screenshotData)
       recentScreenshots = recentScreenshots.slice(-5) // 限5张
+      screenshotCount += 1
       mainWindow.webContents.send('screenshot-taken', screenshotData)
-      mainWindow.webContents.send('screenshots-updated', recentScreenshots)
+      mainWindow.webContents.send('screenshots-updated', recentScreenshots, screenshotCount)
       if (!hasAppendSeparator) {
         mainWindow.webContents.send('solution-chunk', '\n\n---\n\n')
         hasAppendSeparator = true

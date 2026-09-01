@@ -23,6 +23,8 @@ export function AppContent() {
   const screenshotDisplay = useSettingsStore((state) => state.screenshotDisplay)
 
   const [recentScreenshots, setRecentScreenshots] = useState<string[]>([])
+  // Main keeps only the last 5 thumbnails, but every screenshot went to the AI
+  const [screenshotTotal, setScreenshotTotal] = useState(0)
 
   useEffect(() => {
     // Listen for screenshot events (latest)
@@ -31,14 +33,16 @@ export function AppContent() {
     })
 
     // Listen for screenshots-updated events (gallery)
-    window.api.onScreenshotsUpdated((screenshots: string[]) => {
+    window.api.onScreenshotsUpdated((screenshots: string[], total: number) => {
       setRecentScreenshots(screenshots)
+      setScreenshotTotal(total)
     })
 
     // New session clear (pictures + answers)
     window.api.onSolutionClear(() => {
       clearSolution()
       setRecentScreenshots([])
+      setScreenshotTotal(0)
       setScreenshotData(null)
       setErrorMessage(null)
     })
@@ -114,7 +118,8 @@ export function AppContent() {
     }
   }, [])
 
-  // `screenshot-taken` can land a frame before `screenshots-updated`, so fall back to the single one
+  // `screenshots-updated` always accompanies `screenshot-taken`; the fallback only
+  // covers a render that lands between the two
   const screenshots =
     recentScreenshots.length > 0 ? recentScreenshots : screenshotData ? [screenshotData] : []
 
@@ -161,7 +166,11 @@ export function AppContent() {
       {screenshots.length === 0 ? (
         <ShortcutTip />
       ) : (
-        <Screenshots screenshots={screenshots} display={screenshotDisplay} />
+        <Screenshots
+          screenshots={screenshots}
+          total={Math.max(screenshotTotal, screenshots.length)}
+          display={screenshotDisplay}
+        />
       )}
 
       {/* Solution Display */}
@@ -172,9 +181,12 @@ export function AppContent() {
 
 function Screenshots({
   screenshots,
+  total,
   display
 }: {
   screenshots: string[]
+  /** Every screenshot sent to the AI, which can exceed the thumbnails kept around */
+  total: number
   display: ScreenshotDisplay
 }) {
   if (display === 'none') return null
@@ -184,7 +196,7 @@ function Screenshots({
     return (
       <div className="mb-4 inline-flex items-center gap-1.5 rounded-lg border border-white/30 bg-white/10 px-2.5 py-1 text-sm text-gray-100 select-none">
         <Images className="h-4 w-4" />
-        {screenshots.length} 张截图
+        {total} 张截图
       </div>
     )
   }

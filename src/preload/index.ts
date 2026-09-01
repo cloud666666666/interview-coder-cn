@@ -139,10 +139,10 @@ const api = {
     ipcRenderer.removeAllListeners('scroll-page-up')
   },
 
-  // Listen for screenshots-updated (gallery)
-  onScreenshotsUpdated: (callback: (screenshots: string[]) => void) => {
-    ipcRenderer.on('screenshots-updated', (_event, screenshots) => {
-      callback(screenshots)
+  // Listen for screenshots-updated (gallery + the untruncated conversation total)
+  onScreenshotsUpdated: (callback: (screenshots: string[], total: number) => void) => {
+    ipcRenderer.on('screenshots-updated', (_event, screenshots, total) => {
+      callback(screenshots, total)
     })
   },
   removeScreenshotsUpdatedListener: () => {
