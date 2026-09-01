@@ -14,6 +14,10 @@
   -webkit-app-region: drag;
   .actions {
     -webkit-app-region: no-drag;
+    /* The buttons sit flush against the window edges, where the resize handles
+       are; same z-index but later in the DOM, so clicks reach the buttons */
+    position: relative;
+    z-index: 2147483647;
   }
 }
 
