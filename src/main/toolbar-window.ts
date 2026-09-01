@@ -35,7 +35,10 @@ export function createToolbarWindow(parent: BrowserWindow): void {
     parent,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      // Hover dwell runs on setTimeout in this renderer; it must not be
+      // throttled while the window is hidden/occluded (see main-window.ts).
+      backgroundThrottling: false
     }
   })
   ownerWindow = parent
