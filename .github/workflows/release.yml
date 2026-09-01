@@ -55,7 +55,7 @@ jobs:
           files: |
             dist/**/interview-coder-cn-*.dmg
             dist/**/interview-coder-cn-*.exe
-            dist/**/latest-mac.yml
-            dist/**/latest-windows.yml
+            dist/**/interview-coder-cn-*.exe.blockmap
+            dist/**/latest.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
