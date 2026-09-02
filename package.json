@@ -1,6 +1,6 @@
 {
   "name": "interview-coder-cn",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "截屏解题助手，实时截屏并生成解题思路和答案",
   "main": "./out/main/index.js",
   "devEngines": {
