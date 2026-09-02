@@ -37,8 +37,9 @@ export function OverlayToolbar() {
       {TOOLBAR_ACTIONS.slice(0, visibleCount).map(({ action, Icon }) => (
         <ToolbarButton key={action} action={action} Icon={Icon} hoverDelay={hoverDelay} />
       ))}
-      {/* Always on: main.css keeps these edges from ever showing a resize cursor */}
-      <WindowResizeHandles enabled />
+      {/* Always on, width only: the height is the button row. main.css keeps
+          these edges from ever showing a resize cursor */}
+      <WindowResizeHandles enabled axis="x" />
     </div>
   )
 }

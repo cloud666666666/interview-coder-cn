@@ -197,11 +197,11 @@ A second `BrowserWindow` (`src/main/toolbar-window.ts`) that renders the `/toolb
 ### Window Resizing
 
 Both windows are created with `resizable: false` — toggling Electron's native resizable style breaks transparency on Windows — so resizing is implemented by hand:
-- `WindowResizeHandles` renders eight fixed-position edge/corner divs and sends only `window-resize-start` (pointerdown) and `window-resize-stop`
+- `WindowResizeHandles` renders eight fixed-position edge/corner divs — or, with `axis="x"`, just the two side edges — and sends only `window-resize-start` (pointerdown) and `window-resize-stop`
 - `src/main/window-resize.ts` then polls `screen.getCursorScreenPoint()` and calls `setBounds()`. The cursor is sampled in main because the toolbar is a non-activating panel on macOS and never receives a drag's pointer moves
 - The drag is ended by a `window`-level `pointerup`/`pointercancel`/`blur` listener, with a 30s safety timeout in main as the last resort
 - The handles sit at `z-index: 2147483647`; anything flush against a window edge (e.g. `#app-header .actions`) must raise itself above them or it becomes unclickable
-- The main window's handles are gated by the `resizable` setting; the toolbar's are always on, with the resize cursor suppressed in `main.css`
+- The main window's handles are gated by the `resizable` setting; the toolbar's are always on but width-only (`axis="x"` — its height is the button row), with the resize cursor suppressed in `main.css`
 
 ### AI Integration
 

@@ -14,7 +14,7 @@ type ResizeState = {
 }
 
 const MIN_WIDTH = 200
-/** Low enough to still allow shrinking the toolbar, high enough to keep its buttons visible */
+/** Only the main window resizes vertically; low enough to leave it a usable header strip */
 const MIN_HEIGHT = 36
 /** Cursor sampling interval while dragging, roughly one frame */
 const POLL_INTERVAL = 16

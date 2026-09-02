@@ -153,3 +153,10 @@ body:has(.overlay-toolbar-root) {
 body:has(.overlay-toolbar-root) .window-resize-handle {
   cursor: default;
 }
+
+/* Width-only resizing has no corner handles to leave room for */
+.window-resize-e.window-resize-no-corners,
+.window-resize-w.window-resize-no-corners {
+  top: 0;
+  bottom: 0;
+}

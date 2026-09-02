@@ -3,9 +3,17 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 
 type ResizeDirection = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'
 
-const directions: ResizeDirection[] = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
+const ALL_DIRECTIONS: ResizeDirection[] = ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw']
+/** Width-only: a window whose height is dictated by its content, e.g. the toolbar */
+const HORIZONTAL_DIRECTIONS: ResizeDirection[] = ['e', 'w']
 
-export function WindowResizeHandles({ enabled }: { enabled: boolean }) {
+export function WindowResizeHandles({
+  enabled,
+  axis = 'both'
+}: {
+  enabled: boolean
+  axis?: 'both' | 'x'
+}) {
   const isResizing = useRef(false)
 
   const stopResize = useCallback(() => {
@@ -46,10 +54,15 @@ export function WindowResizeHandles({ enabled }: { enabled: boolean }) {
     }
   }
 
+  const horizontalOnly = axis === 'x'
+  const directions = horizontalOnly ? HORIZONTAL_DIRECTIONS : ALL_DIRECTIONS
+
   return directions.map((direction) => (
     <div
       key={direction}
-      className={`window-resize-handle window-resize-${direction}`}
+      className={`window-resize-handle window-resize-${direction}${
+        horizontalOnly ? ' window-resize-no-corners' : ''
+      }`}
       onPointerDown={(event) => startResize(event, direction)}
     />
   ))
