@@ -13,6 +13,14 @@ let ownerWindow: BrowserWindow | null = null
 /** Whether the renderer wants the toolbar on screen (main page + enabled in settings) */
 let isToolbarWanted = false
 let toolbarOpacity = DEFAULT_OPACITY
+/**
+ * The size the user dragged the toolbar to, tracked here instead of being read
+ * back off the window. Windows encloses in both directions of the DIP <-> pixel
+ * conversion, so at fractional display scaling a getBounds() -> setBounds()
+ * round trip hands back a window one pixel larger; syncToolbarBounds runs on
+ * every move event of a window drag, which turned that into unbounded growth.
+ */
+let toolbarSize = { width: TOOLBAR_WIDTH, height: TOOLBAR_HEIGHT }
 
 /**
  * Click-through alternative to the global shortcuts: a small always-on-top
@@ -74,7 +82,8 @@ function syncToolbarBounds(): void {
   const mainBounds = ownerWindow.getBounds()
   const workArea = screen.getDisplayMatching(mainBounds).workArea
   // Keep whatever size the user dragged it to; the constants only seed the window
-  const { width, height } = toolbarWindow.getBounds()
+  const width = Math.min(toolbarSize.width, workArea.width)
+  const height = Math.min(toolbarSize.height, workArea.height)
   toolbarWindow.setBounds({
     x: Math.min(Math.max(mainBounds.x, workArea.x), workArea.x + workArea.width - width),
     y: Math.max(workArea.y, mainBounds.y - height - TOOLBAR_INSET),
@@ -96,6 +105,15 @@ export function showToolbar(): void {
 export function hideToolbar(): void {
   if (!toolbarWindow || toolbarWindow.isDestroyed()) return
   toolbarWindow.hide()
+}
+
+/**
+ * Record a size the user dragged the toolbar to, so that syncToolbarBounds can
+ * reapply it without ever reading it back from the window.
+ */
+export function noteToolbarResize(window: BrowserWindow, width: number, height: number): void {
+  if (window !== toolbarWindow) return
+  toolbarSize = { width, height }
 }
 
 /**

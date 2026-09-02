@@ -1,5 +1,5 @@
 import { globalShortcut, ipcMain, screen } from 'electron'
-import type { BrowserWindow, Rectangle } from 'electron'
+import type { BrowserWindow } from 'electron'
 import type { ModelMessage } from 'ai'
 import { applyContentProtection } from './main-window'
 import {
@@ -94,7 +94,7 @@ const BACKGROUND_GUARD_INTERVAL = 2000
 let frontReassertTimer: NodeJS.Timeout | null = null
 let backgroundGuardTimer: NodeJS.Timeout | null = null
 let isWindowSoftHidden = false
-let softHiddenBounds: Rectangle | null = null
+let softHiddenPosition: [number, number] | null = null
 
 /**
  * Reassert always-on-top. `aggressive` also calls moveTop() which
@@ -142,18 +142,18 @@ function stopFrontReassert() {
   }
 }
 
-function getOffscreenBounds(window: BrowserWindow): Rectangle {
+/**
+ * Soft-hide parks the window here and puts it back by position alone. Its size
+ * is never read and rewritten: on Windows the DIP <-> pixel conversion encloses
+ * in both directions, so every such round trip would hand back a slightly
+ * larger window (see toolbar-window.ts).
+ */
+function getOffscreenPosition(): [number, number] {
   const displays = screen.getAllDisplays()
   const maxRight = Math.max(...displays.map((display) => display.bounds.x + display.bounds.width))
   const topMost = Math.min(...displays.map((display) => display.bounds.y))
-  const [width, height] = window.getSize()
 
-  return {
-    x: maxRight + 2000,
-    y: topMost,
-    width,
-    height
-  }
+  return [maxRight + 2000, topMost]
 }
 
 function softHideWindow(window: BrowserWindow) {
@@ -161,25 +161,25 @@ function softHideWindow(window: BrowserWindow) {
 
   stopFrontReassert()
   stopBackgroundGuard()
-  softHiddenBounds = window.getBounds()
+  softHiddenPosition = window.getPosition() as [number, number]
   isWindowSoftHidden = true
 
   window.setOpacity(0)
   window.setIgnoreMouseEvents(true)
-  window.setBounds(getOffscreenBounds(window))
+  window.setPosition(...getOffscreenPosition())
   hideToolbar()
 }
 
 function restoreSoftHiddenWindow(window: BrowserWindow) {
-  if (!isWindowSoftHidden || !softHiddenBounds || window.isDestroyed()) return
+  if (!isWindowSoftHidden || !softHiddenPosition || window.isDestroyed()) return
 
   applyContentProtection(window, true)
-  window.setBounds(softHiddenBounds)
+  window.setPosition(...softHiddenPosition)
   window.setIgnoreMouseEvents(state.ignoreMouse)
   window.setOpacity(1)
 
   isWindowSoftHidden = false
-  softHiddenBounds = null
+  softHiddenPosition = null
   showToolbar()
   keepWindowInFront(window)
 }
