@@ -39,7 +39,7 @@ dmg:
 npmRebuild: false
 publish:
   provider: github
-  owner: ooboqoo
-  repo: shiping
+  owner: cloud666666666
+  repo: interview-coder-cn
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/
